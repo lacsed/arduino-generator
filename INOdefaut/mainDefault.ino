@@ -42,9 +42,17 @@ void loop()
         {
             // Get the First Uncontrollable Event Enabled
 
-            unsigned long event = eventEnabledUncontrollable & (1L<<i);
+            unsigned long event = eventEnabledUncontrollable & (1L << i);
             if (event > 0)
             {
+                // Execute the state transition for each supervisor
+                for (int k = 0; k < NUMBER_SUPERVISOR; k++)
+                {
+                    int actualState = supervisor[k].getActualState();
+                    int nextState = supervisor[k].MakeTransition(actualState, event);
+                    supervisor[k].setActualState(nextState);
+                }
+
                 // Execute the state transition for each automaton
                 for (int j = 0; j < NUMBER_AUTOMATON; j++)
                 {
@@ -66,9 +74,17 @@ void loop()
             {
 
                 // Get the First Uncontrollable Event Enabled
-                unsigned long event = eventEnabledControlable &(1L<<i);
+                unsigned long event = eventEnabledControlable & (1L << i);
                 if (event > 0)
                 {
+                    // Execute the state transition for each supervisor
+                    for (int k = 0; k < NUMBER_SUPERVISOR; k++)
+                    {
+                        int actualState = supervisor[k].getActualState();
+                        int nextState = supervisor[k].MakeTransition(actualState, event);
+                        supervisor[k].setActualState(nextState);
+                    }
+
                     // Execute the state transition for each automaton
                     for (int j = 0; j < NUMBER_AUTOMATON; j++)
                     {
