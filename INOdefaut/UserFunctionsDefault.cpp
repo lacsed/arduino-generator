@@ -1,12 +1,12 @@
 #include "AutomatonDefault.h"
 
-long getEventControllablble()
+unsigned long getEventControllablble()
 {
     if (!Serial.available())
     {
         return 0;
     }
-    long valorSerial = Serial.parseInt();
+    unsigned long valorSerial = Serial.parseInt();
     return valorSerial;
 }
 

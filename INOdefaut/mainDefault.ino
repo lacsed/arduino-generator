@@ -22,19 +22,19 @@ void loop()
 {
 
     // Get the system events
-    long eventControllablble = getEventControllablble();
-    long eventUncontrollable = getEventUncontrollable();
-    long eventEnabled = (1 << NUMBER_EVENT) - 1;
+    unsigned long eventControllablble = getEventControllablble();
+    unsigned long eventUncontrollable = getEventUncontrollable();
+    unsigned long eventEnabled = (1 << NUMBER_EVENT) - 1;
 
     // Check the enabled events
-    for (int i = 0; i < NUMBER_AUTOMATON; i++)
+    for (int i = 0; i < NUMBER_SUPERVISOR; i++)
     {
         eventEnabled &= supervisor[i].getEnabledEvent();
     }
 
     // Check if any enabled event was detected
-    long eventEnabledControlable = eventControllablble & eventEnabled;
-    long eventEnabledUncontrollable = eventUncontrollable & eventEnabled;
+    unsigned long eventEnabledControlable = eventControllablble & eventEnabled;
+    unsigned long eventEnabledUncontrollable = eventUncontrollable & eventEnabled;
 
     if (eventEnabledUncontrollable > 0)
     {
@@ -42,7 +42,7 @@ void loop()
         {
             // Get the First Uncontrollable Event Enabled
 
-            long event = eventEnabledUncontrollable & (1L<<i);
+            unsigned long event = eventEnabledUncontrollable & (1L<<i);
             if (event > 0)
             {
                 // Execute the state transition for each automaton
@@ -66,7 +66,7 @@ void loop()
             {
 
                 // Get the First Uncontrollable Event Enabled
-                long event = eventEnabledControlable &(1L<<i);
+                unsigned long event = eventEnabledControlable &(1L<<i);
                 if (event > 0)
                 {
                     // Execute the state transition for each automaton

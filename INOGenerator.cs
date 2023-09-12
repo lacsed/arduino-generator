@@ -68,8 +68,8 @@ namespace PFC_Final
                 eventMap[listOfEvents[i]] = sequence.ToString();
             }
 
-            getEventUncontrollable.AppendLine($"long getEventUncontrollable(){{");
-            getEventUncontrollable.AppendLine($"\tlong Uncontrollable=0; \n");
+            getEventUncontrollable.AppendLine($"unsigned long getEventUncontrollable(){{");
+            getEventUncontrollable.AppendLine($"\tunsigned long Uncontrollable=0; \n");
 
             foreach (var ev in listOfEvents)
             {
@@ -160,39 +160,45 @@ namespace PFC_Final
 
         }
 
-
         private static void ConvertAutomatonList(List<DeterministicFiniteAutomaton> automatonList, Dictionary<AbstractEvent, string> eventMap, StringBuilder instanceAutomaton, StringBuilder automatonLoopForAll, StringBuilder automatonLoop, StringBuilder trasionLogic, StringBuilder stateActionForAll, StringBuilder stateAction, StringBuilder stateEventVector, StringBuilder makeTrasition, StringBuilder assignmentVector, ref int autnumLocal, string typeAutomaton)
         {
             int numberOfAutomatons = automatonList.Count;
 
-            int autnum  = autnumLocal;
+            int autnum = autnumLocal;
 
             instanceAutomaton.AppendLine($"Automaton {typeAutomaton}[{numberOfAutomatons}] = {{");
 
-            
+            bool isSupervisor = typeAutomaton == "supervisor"; 
 
             foreach (var automaton in automatonList)
             {
+                string supervisorAction = $"void Supervisor{autnum}Action()\n{{\n\tSerial.println(\"Supervisor\");\n \tdelay(500);\n}}\n\n";
                 int numberStates = automaton.States.Count();
 
                 automatonLoopForAll.AppendLine($"void Automaton{autnum}Loop(int State){{");
                 automatonLoopForAll.AppendLine($"\tActionAutomatons{autnum}[State]();");
                 automatonLoopForAll.AppendLine("}\n");
 
-
-
                 automatonLoop.AppendLine($"void Automaton{autnum}Loop(int State); \n");
-                trasionLogic.Append($"int MakeTransitionAutomaton{autnum}(int State, long Event);\n");
+                trasionLogic.Append($"int MakeTransitionAutomaton{autnum}(int State, unsigned long Event);\n");
 
-                for (int i = 0; i < numberStates; i++)
+                if (!isSupervisor)
                 {
-                    string stateName = $"StateActionAutomaton{autnum}State{i}";
+                    for (int i = 0; i < numberStates; i++)
+                    {
+                        string stateName = $"StateActionAutomaton{autnum}State{i}";
 
-                    stateActionForAll.Append($"void {stateName}()\n{{\n\tSerial.println(\"A{autnum}S{i}\");\n \tdelay(500);\n}}\n\n");
-                    stateAction.Append($"void {stateName}();\n");
+                        stateActionForAll.Append($"void {stateName}()\n{{\n\tSerial.println(\"A{autnum}S{i}\");\n \tdelay(500);\n}}\n\n");
+                        stateAction.Append($"void {stateName}();\n");
+                    }
+
+                    stateAction.Append("\n");
                 }
-
-                stateAction.Append("\n");
+                else
+                {
+                    stateAction.Append($"void Supervisor{autnum}Action();\n");
+                    stateActionForAll.Append(supervisorAction);
+                }
 
 
                 // State Translate
@@ -222,12 +228,12 @@ namespace PFC_Final
 
 
 
-                stateEventVector.Append($"long enabledEventStatesAutomaton{autnum}[{count}]={{");
+                stateEventVector.Append($"unsigned long enabledEventStatesAutomaton{autnum}[{count}]={{");
                 stateEventVector.Append(string.Join(",", listEventOfState.Select(item => $" 0b{item}")));
                 stateEventVector.Append($"}};\n");
 
 
-                makeTrasition.AppendLine($"int MakeTransitionAutomaton{autnum}(int State, long Event) \n{{ ");
+                makeTrasition.AppendLine($"int MakeTransitionAutomaton{autnum}(int State, unsigned long Event) \n{{ ");
                 makeTrasition.AppendLine($"\tif(Event==0){{").AppendLine("\t\treturn State;").AppendLine("\t}\n");
 
 
@@ -253,9 +259,20 @@ namespace PFC_Final
                     instanceAutomaton.Append(", \n");
                 }
 
-                assignmentVector.AppendLine($"GenericAction ActionAutomatons{autnum}[{numberStates}]={{ {string.Join(",", Enumerable.Range(0, numberStates).Select(i => $"&StateActionAutomaton{autnum}State{i}"))} }}; ");
 
 
+
+
+
+
+                if (isSupervisor)
+                {
+                    assignmentVector.AppendLine($"GenericAction ActionAutomatons{autnum}[{numberStates}]={{ {string.Join(",", Enumerable.Range(0, numberStates).Select(i => $"&Supervisor{autnum}Action"))} }};");
+                }
+                else
+                {
+                    assignmentVector.AppendLine($"GenericAction ActionAutomatons{autnum}[{numberStates}]={{ {string.Join(",", Enumerable.Range(0, numberStates).Select(i => $"&StateActionAutomaton{autnum}State{i}"))} }};");
+                }
 
 
 
