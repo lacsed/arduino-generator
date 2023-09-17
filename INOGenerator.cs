@@ -172,7 +172,6 @@ namespace PFC_Final
 
             foreach (var automaton in automatonList)
             {
-                string supervisorAction = $"void Supervisor{autnum}Action()\n{{\n\tSerial.println(\"Supervisor\");\n \tdelay(500);\n}}\n\n";
                 int numberStates = automaton.States.Count();
 
                 automatonLoopForAll.AppendLine($"void Automaton{autnum}Loop(int State){{");
@@ -194,11 +193,7 @@ namespace PFC_Final
 
                     stateAction.Append("\n");
                 }
-                else
-                {
-                    stateAction.Append($"void Supervisor{autnum}Action();\n");
-                    stateActionForAll.Append(supervisorAction);
-                }
+              
 
 
                 // State Translate
@@ -267,7 +262,7 @@ namespace PFC_Final
 
                 if (isSupervisor)
                 {
-                    assignmentVector.AppendLine($"GenericAction ActionAutomatons{autnum}[{numberStates}]={{ {string.Join(",", Enumerable.Range(0, numberStates).Select(i => $"&Supervisor{autnum}Action"))} }};");
+                    assignmentVector.AppendLine($"GenericAction ActionAutomatons{autnum}[{1}]={{[](){{}} }}");
                 }
                 else
                 {

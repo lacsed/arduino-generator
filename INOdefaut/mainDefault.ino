@@ -24,25 +24,14 @@ void loop()
     // Get the system events
     unsigned long eventControllablble = getEventControllablble();
     unsigned long eventUncontrollable = getEventUncontrollable();
-    unsigned long eventEnabled = (1 << NUMBER_EVENT) - 1;
 
-    // Check the enabled events
-    for (int i = 0; i < NUMBER_SUPERVISOR; i++)
-    {
-        eventEnabled &= supervisor[i].getEnabledEvent();
-    }
-
-    // Check if any enabled event was detected
-    unsigned long eventEnabledControlable = eventControllablble & eventEnabled;
-    unsigned long eventEnabledUncontrollable = eventUncontrollable & eventEnabled;
-
-    if (eventEnabledUncontrollable > 0)
+    if (eventUncontrollable > 0)
     {
         for (int i = 0; i < NUMBER_EVENT; i++)
         {
-            // Get the First Uncontrollable Event Enabled
+            // Get one Uncontrollable Event each time
 
-            unsigned long event = eventEnabledUncontrollable & (1L << i);
+            unsigned long event = eventUncontrollable & (1L << i);
             if (event > 0)
             {
                 // Execute the state transition for each supervisor
@@ -60,39 +49,45 @@ void loop()
                     int nextState = automata[j].MakeTransition(actualState, event);
                     automata[j].setActualState(nextState);
                 }
-                break;
             }
         }
     }
-    else
+
+    unsigned long eventEnabled = (1 << NUMBER_EVENT) - 1;
+
+    // Check the enabled events
+    for (int i = 0; i < NUMBER_SUPERVISOR; i++)
+    {
+        eventEnabled &= supervisor[i].getEnabledEvent();
+    }
+
+    // Check if any enabled Controllable event was detected
+    unsigned long eventEnabledControlable = eventControllablble & eventEnabled;
+
+    if (eventEnabledControlable > 0)
     {
 
-        if (eventEnabledControlable > 0)
+        for (int i = 0; i < NUMBER_EVENT; i++)
         {
 
-            for (int i = 0; i < NUMBER_EVENT; i++)
+            // Get the First Controllable Event Enabled
+            unsigned long event = eventEnabledControlable & (1L << i);
+            if (event > 0)
             {
-
-                // Get the First Uncontrollable Event Enabled
-                unsigned long event = eventEnabledControlable & (1L << i);
-                if (event > 0)
+                // Execute the state transition for each supervisor
+                for (int k = 0; k < NUMBER_SUPERVISOR; k++)
                 {
-                    // Execute the state transition for each supervisor
-                    for (int k = 0; k < NUMBER_SUPERVISOR; k++)
-                    {
-                        int actualState = supervisor[k].getActualState();
-                        int nextState = supervisor[k].MakeTransition(actualState, event);
-                        supervisor[k].setActualState(nextState);
-                    }
+                    int actualState = supervisor[k].getActualState();
+                    int nextState = supervisor[k].MakeTransition(actualState, event);
+                    supervisor[k].setActualState(nextState);
+                }
 
-                    // Execute the state transition for each automaton
-                    for (int j = 0; j < NUMBER_AUTOMATON; j++)
-                    {
-                        int actualState = automata[j].getActualState();
-                        int nextState = automata[j].MakeTransition(actualState, event);
-                        automata[j].setActualState(nextState);
-                    }
-                    break;
+                // Execute the state transition for each automaton
+                for (int j = 0; j < NUMBER_AUTOMATON; j++)
+                {
+                    int actualState = automata[j].getActualState();
+                    int nextState = automata[j].MakeTransition(actualState, event);
+                    automata[j].setActualState(nextState);
                 }
             }
         }
