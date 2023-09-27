@@ -262,7 +262,7 @@ namespace PFC_Final
 
                 if (isSupervisor)
                 {
-                    assignmentVector.AppendLine($"GenericAction ActionAutomatons{autnum}[{1}]={{[](){{}} }}");
+                    assignmentVector.AppendLine($"GenericAction ActionAutomatons{autnum}[{1}]={{[](){{}}}};");
                 }
                 else
                 {
