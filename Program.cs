@@ -70,7 +70,7 @@ namespace PFC_Final
             var e =
                Enumerable.Range(0, 17)
                    .Select(i =>
-                       new Event(i.ToString(),
+                       new Event($"E_{i}",
                            i % 2 != 0
                                ? Controllability.Controllable
                                : Controllability.Uncontrollable)

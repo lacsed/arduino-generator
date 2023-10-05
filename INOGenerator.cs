@@ -26,6 +26,8 @@ namespace PFC_Final
             string dotH = File.ReadAllText(defaultPath + "AutomatonDefault.h");
             string dotCPP = File.ReadAllText(defaultPath + "AutomatonDefault.cpp");
             string dotUser = File.ReadAllText(defaultPath + "UserFunctionsDefault.cpp");
+            string dotEventCPP = File.ReadAllText(defaultPath + "EventDefault.cpp");
+            string dotEventH = File.ReadAllText(defaultPath + "EventDefault.h");
 
             #endregion
 
@@ -44,6 +46,7 @@ namespace PFC_Final
             StringBuilder uncontrollableEvent = new StringBuilder();
             StringBuilder uncontrollableEventForAll = new StringBuilder();
             StringBuilder getEventUncontrollable = new StringBuilder();
+            StringBuilder defineEventPosition = new StringBuilder();
 
             #endregion
 
@@ -58,19 +61,24 @@ namespace PFC_Final
             }
 
             Dictionary<AbstractEvent, string> eventMap = new Dictionary<AbstractEvent, string>();
+            Dictionary<AbstractEvent, string> eventMapPosition = new Dictionary<AbstractEvent, string>();
+
             int numEvents = listOfEvents.Count;
 
             for (int i = 0; i < numEvents; i++)
             {
+                defineEventPosition.AppendLine($"#define EVENT_{listOfEvents[i].ToString().ToUpper()} {i}");
                 StringBuilder sequence = new StringBuilder(numEvents);
                 sequence.Append('0', numEvents);
                 sequence[i] = '1';
                 eventMap[listOfEvents[i]] = sequence.ToString();
+                eventMapPosition[listOfEvents[i]] = $"EVENT_{listOfEvents[i].ToString().ToUpper()}";
             }
 
             getEventUncontrollable.AppendLine($"unsigned long getEventUncontrollable(){{");
             getEventUncontrollable.AppendLine($"\tunsigned long Uncontrollable=0; \n");
 
+            
             foreach (var ev in listOfEvents)
             {
 
@@ -86,7 +94,9 @@ namespace PFC_Final
                     getEventUncontrollable.AppendLine($"\t\tUncontrollable|=0b{eventMap[ev]};");
                     getEventUncontrollable.AppendLine($"\t}}");
 
+                    
                 }
+              
 
             }
             getEventUncontrollable.AppendLine($"\n\treturn Uncontrollable;");
@@ -98,14 +108,14 @@ namespace PFC_Final
 
             int autnum = 0;
 
-            ConvertAutomatonList(plantList, eventMap, instanceAutomaton, automatonLoopForAll, automatonLoop, trasionLogic,  stateActionForAll,  stateAction, stateEventVector, makeTrasition, assignmentVector, ref autnum, "automata");
+            ConvertAutomatonList(plantList, eventMap, eventMapPosition, instanceAutomaton, automatonLoopForAll, automatonLoop, trasionLogic,  stateActionForAll,  stateAction, stateEventVector, makeTrasition, assignmentVector, ref autnum, "automata");
 
 
             #endregion
 
             #region Supervisor Translate
 
-            ConvertAutomatonList(supervisorList, eventMap, instanceAutomaton, automatonLoopForAll, automatonLoop, trasionLogic, stateActionForAll, stateAction, stateEventVector, makeTrasition, assignmentVector, ref autnum, "supervisor");
+            ConvertAutomatonList(supervisorList, eventMap, eventMapPosition, instanceAutomaton, automatonLoopForAll, automatonLoop, trasionLogic, stateActionForAll, stateAction, stateEventVector, makeTrasition, assignmentVector, ref autnum, "supervisor");
 
 
             #endregion
@@ -123,6 +133,7 @@ namespace PFC_Final
             dotCPP = dotCPP.Replace("// ADD-AUTOMATON-LOOP", automatonLoopForAll.ToString());
             dotCPP = dotCPP.Replace("// ADD-TRANSITION-LOGIC", makeTrasition.ToString());
             dotCPP = dotCPP.Replace("#include \"AutomatonDefault.h\"", "#include \"Automaton.h\"");
+            dotCPP = dotCPP.Replace("#include \"EventDefault.h\"", "#include \"Event.h\"");
 
 
             dotINO = dotINO.Replace("#include \"AutomatonDefaut.h\"", "#include \"Automaton.h\"");
@@ -139,6 +150,9 @@ namespace PFC_Final
             dotUser = dotUser.Replace("// ADD-EVENT-UNCONTROLLABLE", uncontrollableEventForAll.ToString());
             dotUser = dotUser.Replace("#include \"AutomatonDefault.h\"", "#include \"Automaton.h\"");
 
+            dotEventH = dotEventH.Replace("// ADD-ALL-EVENTS", defineEventPosition.ToString());
+
+            
             #endregion
 
             #region Write All Result Files
@@ -148,6 +162,8 @@ namespace PFC_Final
 
             Directory.CreateDirectory(resultPath);
 
+            File.WriteAllText(resultPath + @"\" + "Event.cpp", dotEventCPP);
+            File.WriteAllText(resultPath + @"\" + "Event.h", dotEventH);
             File.WriteAllText(resultPath + @"\" + "UserFunctions.cpp", dotUser);
             File.WriteAllText(resultPath + @"\" + "Automaton.cpp", dotCPP);
             File.WriteAllText(resultPath + @"\" + "Automaton.h", dotH);
@@ -160,7 +176,7 @@ namespace PFC_Final
 
         }
 
-        private static void ConvertAutomatonList(List<DeterministicFiniteAutomaton> automatonList, Dictionary<AbstractEvent, string> eventMap, StringBuilder instanceAutomaton, StringBuilder automatonLoopForAll, StringBuilder automatonLoop, StringBuilder trasionLogic, StringBuilder stateActionForAll, StringBuilder stateAction, StringBuilder stateEventVector, StringBuilder makeTrasition, StringBuilder assignmentVector, ref int autnumLocal, string typeAutomaton)
+        private static void ConvertAutomatonList(List<DeterministicFiniteAutomaton> automatonList, Dictionary<AbstractEvent, string> eventMap, Dictionary<AbstractEvent, string> eventMapPosition, StringBuilder instanceAutomaton, StringBuilder automatonLoopForAll, StringBuilder automatonLoop, StringBuilder trasionLogic, StringBuilder stateActionForAll, StringBuilder stateAction, StringBuilder stateEventVector, StringBuilder makeTrasition, StringBuilder assignmentVector, ref int autnumLocal, string typeAutomaton)
         {
             int numberOfAutomatons = automatonList.Count;
 
@@ -179,7 +195,7 @@ namespace PFC_Final
                 automatonLoopForAll.AppendLine("}\n");
 
                 automatonLoop.AppendLine($"void Automaton{autnum}Loop(int State); \n");
-                trasionLogic.Append($"int MakeTransitionAutomaton{autnum}(int State, unsigned long Event);\n");
+                trasionLogic.Append($"int MakeTransitionAutomaton{autnum}(int State, uint8_t eventPosition);\n");
 
                 if (!isSupervisor)
                 {
@@ -228,13 +244,11 @@ namespace PFC_Final
                 stateEventVector.Append($"}};\n");
 
 
-                makeTrasition.AppendLine($"int MakeTransitionAutomaton{autnum}(int State, unsigned long Event) \n{{ ");
-                makeTrasition.AppendLine($"\tif(Event==0){{").AppendLine("\t\treturn State;").AppendLine("\t}\n");
-
-
+                makeTrasition.AppendLine($"int MakeTransitionAutomaton{autnum}(int State, uint8_t eventPosition) \n{{ ");
+            
                 foreach (var (o, ev, d) in automaton.Transitions)
                 {
-                    makeTrasition.AppendLine($"\tif (State == {stateMap[o]} && (Event & 0b{ eventMap[ev]})==0b{ eventMap[ev]})\t{{ ");
+                    makeTrasition.AppendLine($"\tif (State == {stateMap[o]} && (eventPosition=={eventMapPosition[ev]})){{ ");
                     makeTrasition.AppendLine($"\t\treturn {stateMap[d]};");
                     makeTrasition.AppendLine("\t}");
 
