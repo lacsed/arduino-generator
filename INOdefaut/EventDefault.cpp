@@ -1,21 +1,14 @@
 
 #include "EventDefault.h"
 
-inline Event createEvent(int size)
+Event createEvent(int size)
 {
     Event event = new uint8_t[size];
     memset(event, 0, size);
     return event;
 }
 
-inline Event createEvent(int size, int value)
-{
-    Event event = new uint8_t[size];
-    memset(event, value, size);
-    return event;
-}
-
-inline Event createEvent(uint8_t *data)
+Event createEventFromData(uint8_t *data)
 {
     int size = sizeof(data);
     Event event = new uint8_t[size];
@@ -23,12 +16,12 @@ inline Event createEvent(uint8_t *data)
     return event;
 }
 
-inline void deleteEvent(Event $event)
+void deleteEvent(Event &event)
 {
     delete[] event;
 }
 
-inline void setBit(Event &event, int position, bool value)
+void setBit(Event &event, int position, bool value)
 {
     int byteIndex = position / 8;
     int bitIndex = position % 8;
@@ -42,14 +35,14 @@ inline void setBit(Event &event, int position, bool value)
     }
 }
 
-inline bool getBit(const Event event, int position)
+bool getBit(const Event event, int position)
 {
     int byteIndex = position / 8;
     int bitIndex = position % 8;
     return (event[byteIndex] >> bitIndex) & 1;
 }
 
-inline Event bitwiseAnd(const Event &event1, const Event &event2)
+Event bitwiseAnd(const Event &event1, const Event &event2)
 {
     int size = sizeof(event1);
     Event result = createEvent(size);
@@ -60,7 +53,7 @@ inline Event bitwiseAnd(const Event &event1, const Event &event2)
     return result;
 }
 
-inline Event bitwiseOr(const Event &event1, const Event &event2)
+Event bitwiseOr(const Event &event1, const Event &event2)
 {
     int size = sizeof(event1);
     Event result = createEvent(size);
@@ -71,7 +64,7 @@ inline Event bitwiseOr(const Event &event1, const Event &event2)
     return result;
 }
 
-inline Event bitwiseXor(const Event &event1, const Event &event2)
+Event bitwiseXor(const Event &event1, const Event &event2)
 {
     int size = sizeof(event1);
     Event result = createEvent(size);
@@ -82,7 +75,7 @@ inline Event bitwiseXor(const Event &event1, const Event &event2)
     return result;
 }
 
-inline Event bitwiseNot(const Event &event)
+Event bitwiseNot(const Event &event)
 {
     int size = sizeof(event);
     Event result = createEvent(size);
@@ -93,7 +86,7 @@ inline Event bitwiseNot(const Event &event)
     return result;
 }
 
-inline bool areEqual(const Event &event1, const Event &event2)
+bool areEqual(const Event &event1, const Event &event2)
 {
     int size = sizeof(event1);
     if (sizeof(event2) != size)

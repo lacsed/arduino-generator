@@ -89,8 +89,7 @@ namespace PFC_Final
               new[]
               {
                     new Transition(s0, e[3], s1),
-                    new Transition(s1, e[14], s0),
-                    new Transition(s1, e[16], s0)
+                    new Transition(s1, e[14], s0)
               },
               s0, "C1");
 
@@ -173,6 +172,9 @@ namespace PFC_Final
             planta.Add(Cg);
 
             supervisor.Add(SM);
+
+         
+
 
             INOGenerator.ConvertDEStoINO(planta, supervisor);
 

@@ -7,19 +7,18 @@
 
 typedef uint8_t *Event;
 
-inline Event createEvent(int size);
-inline Event createEvent(int size, int value);
-inline Event createEvent(uint8_t *data);
-inline void deleteEvent(Event &event);
+Event createEvent(int size);
+Event createEventFromData(uint8_t *data);
+void deleteEvent(Event &event);
 
-inline void setBit(Event &event, int position, bool value);
-inline bool getBit(const Event event, int position);
+void setBit(Event &event, int position, bool value);
+bool getBit(const Event event, int position);
 
-inline Event bitwiseAnd(const Event &event1, const Event &event2);
-inline Event bitwiseOr(const Event &event1, const Event &event2);
-inline Event bitwiseXor(const Event &event1, const Event &event2);
-inline Event bitwiseNot(const Event &event);
-inline bool areEqual(const Event &event1, const Event &event2);
+Event bitwiseAnd(const Event &event1, const Event &event2);
+Event bitwiseOr(const Event &event1, const Event &event2);
+Event bitwiseXor(const Event &event1, const Event &event2);
+Event bitwiseNot(const Event &event);
+bool areEqual(const Event &event1, const Event &event2);
 
 // ADD-ALL-EVENTS
 

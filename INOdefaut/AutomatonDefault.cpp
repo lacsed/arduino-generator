@@ -4,6 +4,8 @@
 Automaton::Automaton(int numStates, Event *enabledEventStates, int (*MakeTransition)(int state, uint8_t eventPosition), void (*Loop)(int state))
     : numStates(numStates), enabledEventStates(enabledEventStates), MakeTransition(MakeTransition), Loop(Loop) {}
 
+Automaton::Automaton(){}
+
 Automaton::~Automaton() {}
 
 void Automaton::setEvent(Event event)
@@ -26,7 +28,7 @@ int Automaton::getNumStates()
     return numStates;
 }
 
-Event Automaton::getEnabledEvent()
+Event Automaton::getEnabledEvent(Event emptyEvent)
 {
     if (actualState >= 0 && actualState < sizeof(enabledEventStates) / sizeof(enabledEventStates[0]))
     {
@@ -34,7 +36,7 @@ Event Automaton::getEnabledEvent()
     }
     else
     {
-        return 0;
+        return emptyEvent;
     }
 }
 
@@ -43,4 +45,3 @@ Event Automaton::getEnabledEvent()
 // ADD-AUTOMATON-LOOP
 
 // ADD-TRANSITION-LOGIC
-

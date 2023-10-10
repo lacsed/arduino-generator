@@ -18,14 +18,16 @@ Event eventControllable = createEvent(SIZE_EVENT);
 Event eventUncontrollable = createEvent(SIZE_EVENT);
 Event emptyEvent = createEvent(SIZE_EVENT);
 
-// Initialize the automatons
-// ADD-VECTOR-EVENT
-
 // Create a vector to store the automatons
-// ADD-INSTANCE-AUTOMATON
+Automaton automata[NUMBER_AUTOMATON];
+Automaton supervisor[NUMBER_SUPERVISOR];
 
 void setup()
-{
+{ // Initialize the automatons
+// ADD-VECTOR-EVENT
+
+// ADD-INSTANCE-AUTOMATON
+
     Serial.begin(9600);
     setupPin();
 }
@@ -35,8 +37,8 @@ void loop()
 {
 
     // Get the system events
-    eventControllable = bitwiseOr(eventControllable, getEventControllablble());
-    eventUncontrollable = bitwiseOr(eventUncontrollable, getEventUncontrollable());
+    getEventControllable(eventControllable);
+    getEventUncontrollable(eventUncontrollable);
 
     // Verify the events that are able to happen
     Event eventEnabled = createEvent(SIZE_EVENT);
@@ -44,7 +46,7 @@ void loop()
     // Check the enabled events
     for (int i = 0; i < NUMBER_AUTOMATON; i++)
     {
-        eventEnabled = bitwiseOr(eventEnabled, automata[i].getEnabledEvent());
+        eventEnabled = bitwiseOr(eventEnabled, automata[i].getEnabledEvent(emptyEvent));
     }
 
     Event eventEnabledUncontrollable = bitwiseAnd(eventUncontrollable, eventEnabled);
@@ -56,22 +58,15 @@ void loop()
         for (int i = firstEventUncontrollable; i < NUMBER_EVENT; i++)
         {
             // Get one Uncontrollable Event each time
-            Event genericEvent = createEvent(SIZE_EVENT);
-            setBit(&genericEvent, i, true);
-
-            genericEvent = bitwiseAnd(eventEnabledUncontrollable, genericEvent);
-
-            if (!areEqual(genericEvent, emptyEvent))
+            bool existEvent = getBit(eventEnabledUncontrollable, i);
+            if (existEvent)
             {
                 executeTransition(i);
-
                 setBit(eventUncontrollable, i, false);
                 firstEventUncontrollable = (firstEventUncontrollable + 1) % NUMBER_EVENT;
-                deleteEvent(genericEvent);
+
                 break;
             }
-
-            deleteEvent(genericEvent);
         }
     }
     else
@@ -81,7 +76,7 @@ void loop()
         // Check the enabled events
         for (int i = 0; i < NUMBER_AUTOMATON; i++)
         {
-            eventEnabled = bitwiseOr(eventEnabled, supervisor[i].getEnabledEvent());
+            eventEnabled = bitwiseOr(eventEnabled, supervisor[i].getEnabledEvent(emptyEvent));
         }
 
         // Check if any enabled Controllable event was detected
@@ -92,23 +87,16 @@ void loop()
 
             for (int i = firstEventControllable; i < NUMBER_EVENT; i++)
             {
-                // Get one Uncontrollable Event each time
-                Event genericEvent = createEvent(SIZE_EVENT);
-                setBit(&genericEvent, i, true);
+                // Get one Controllable Event each time
+                bool existEvent = getBit(eventEnabledControllable, i);
 
-                genericEvent = bitwiseAnd(eventEnabledControllable, genericEvent);
-
-                if (!areEqual(genericEvent, emptyEvent))
+                if (existEvent)
                 {
-                    executeTransition(genericEvent);
-
+                    executeTransition(i);
                     setBit(eventControllable, i, false);
                     firstEventControllable = (firstEventControllable + 1) % NUMBER_EVENT;
-                    deleteEvent(genericEvent);
                     break;
                 }
-
-                deleteEvent(genericEvent);
             }
         }
 
