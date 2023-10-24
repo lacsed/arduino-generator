@@ -1,24 +1,29 @@
 
 #include "EventDefault.h"
 
-Event createEvent(int size)
+Event createEvent()
 {
-    Event event = new uint8_t[size];
-    memset(event, 0, size);
-    return event;
+  Event event;
+  zeroEvent(event);
+  return event;
 }
 
 Event createEventFromData(uint8_t *data)
 {
-    int size = sizeof(data);
-    Event event = new uint8_t[size];
-    memcpy(event, data, size);
-    return event;
+  Event event;
+  for (int i = 0; i < SIZE_EVENT; i++)
+  {
+    event.data[i] = data[i];
+  }
+  return event;
 }
 
-void deleteEvent(Event &event)
+void copyEvent(const Event source, Event &destination)
 {
-    delete[] event;
+  for (int i = 0; i < SIZE_EVENT; i++)
+  {
+    destination.data[i] = source.data[i];
+  }
 }
 
 void setBit(Event &event, int position, bool value)
@@ -27,72 +32,99 @@ void setBit(Event &event, int position, bool value)
     int bitIndex = position % 8;
     if (value)
     {
-        event[byteIndex] |= (1 << bitIndex);
+        event.data[byteIndex] |= (1 << bitIndex);
     }
     else
     {
-        event[byteIndex] &= ~(1 << bitIndex);
-    }
+        event.data[byteIndex] &= ~(1 << bitIndex);
+  }
 }
 
 bool getBit(const Event event, int position)
 {
     int byteIndex = position / 8;
     int bitIndex = position % 8;
-    return (event[byteIndex] >> bitIndex) & 1;
+    return (event.data[byteIndex] >> bitIndex) & 1;
 }
 
-Event bitwiseAnd(const Event &event1, const Event &event2)
+void bitwiseAnd(Event &result, const Event &event1, const Event &event2)
 {
-    int size = sizeof(event1);
-    Event result = createEvent(size);
-    for (int i = 0; i < size; i++)
-    {
-        result[i] = event1[i] & event2[i];
-    }
-    return result;
+  for (int i = 0; i < SIZE_EVENT; i++)
+  {
+    result.data[i] = event1.data[i] & event2.data[i];
+  }
 }
 
-Event bitwiseOr(const Event &event1, const Event &event2)
+void bitwiseOr(Event &result, const Event &event1, const Event &event2)
 {
-    int size = sizeof(event1);
-    Event result = createEvent(size);
-    for (int i = 0; i < size; i++)
-    {
-        result[i] = event1[i] | event2[i];
-    }
-    return result;
+  for (int i = 0; i < SIZE_EVENT; i++)
+  {
+    result.data[i] = event1.data[i] | event2.data[i];
+  }
 }
 
-Event bitwiseXor(const Event &event1, const Event &event2)
+void bitwiseXor(Event &result, const Event &event1, const Event &event2)
 {
-    int size = sizeof(event1);
-    Event result = createEvent(size);
-    for (int i = 0; i < size; i++)
-    {
-        result[i] = event1[i] ^ event2[i];
-    }
-    return result;
+  for (int i = 0; i < SIZE_EVENT; i++)
+  {
+    result.data[i] = event1.data[i] ^ event2.data[i];
+  }
 }
 
-Event bitwiseNot(const Event &event)
+void bitwiseNot(Event &result, const Event &event)
 {
-    int size = sizeof(event);
-    Event result = createEvent(size);
-    for (int i = 0; i < size; i++)
-    {
-        result[i] = ~event[i];
-    }
-    return result;
+  for (int i = 0; i < SIZE_EVENT; i++)
+  {
+    result.data[i] = ~event.data[i];
+  }
 }
 
 bool areEqual(const Event &event1, const Event &event2)
 {
-    int size = sizeof(event1);
-    if (sizeof(event2) != size)
+  for (int i = 0; i < SIZE_EVENT; i++)
+  {
+    if (event1.data[i] != event2.data[i])
     {
-        return false;
+      return false;
     }
+  }
+  return true;
+}
 
-    return memcmp(event1, event2, size) == 0;
+void zeroEvent(Event &event)
+{
+  for (int i = 0; i < SIZE_EVENT; i++)
+  {
+    event.data[i] = 0;
+  }
+}
+
+void oneEvent(Event &event)
+{
+  for (int i = 0; i < SIZE_EVENT; i++)
+  {
+    event.data[i] = 0xFF;
+  }
+}
+
+void printEvent(const Event event)
+{
+  for (int i = 0; i < SIZE_EVENT; i++)
+  {
+    Serial.print("[");
+    for (int j = 7; j >= 0; j--)
+    {
+      Serial.print((event.data[i] >> j) & 1);
+      if (j > 0)
+      {
+        Serial.print("-");
+      }
+    }
+    Serial.print("]");
+    if (i < SIZE_EVENT - 1)
+    {
+      Serial.print(",");
+    }
+  }
+  Serial.println();
 }

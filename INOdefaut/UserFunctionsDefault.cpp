@@ -6,20 +6,18 @@ void setupPin()
 
 void getEventControllable(Event &eventControllable)
 {
-    int totalEvent = sizeof(eventControllable) / sizeof(uint8_t);
 
     if (!Serial.available())
     {
         return;
     }
 
-    String input = Serial.readStringUntil('\n'); 
+    String input = Serial.readStringUntil('\n');
     input.trim();
-
 
     int actualEvent = input.toInt();
 
-    if (actualEvent >= 0 && actualEvent < totalEvent)
+    if (actualEvent >= 0 && actualEvent < NUMBER_EVENT)
     {
         setBit(eventControllable, actualEvent, true);
     }

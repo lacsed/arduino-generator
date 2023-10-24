@@ -67,14 +67,18 @@ namespace PFC_Final
             int numEvents = listOfEvents.Count;
             int sizeVector = (numEvents + (numEvents % 8)) / 8;
 
-            for (int i = 0; i < numEvents; i++)
+
+            foreach (var element in listOfEvents)
             {
-                defineEventPosition.AppendLine($"#define EVENT_{listOfEvents[i].ToString().ToUpper()} {i}");
+                int i = listOfEvents.IndexOf(element);
+                defineEventPosition.AppendLine($"#define EVENT_{element.ToString().ToUpper()} {numEvents-1-i}");
                 StringBuilder sequence = new StringBuilder(numEvents);
                 sequence.Append('0', numEvents);
                 sequence[i] = '1';
-                eventMap[listOfEvents[i]] = SplitBinaryString(sequence.ToString());
-                eventMapPosition[listOfEvents[i]] = $"EVENT_{listOfEvents[i].ToString().ToUpper()}";
+                Console.WriteLine($"EVENT_{element.ToString().ToUpper()}");
+                Console.WriteLine(sequence.ToString());
+                eventMap[element] = SplitBinaryString(sequence.ToString());
+                eventMapPosition[listOfEvents[i]] = $"EVENT_{element.ToString().ToUpper()}";
             }
 
             getEventUncontrollable.AppendLine($"void getEventUncontrollable(Event &eventUncontrollable){{");
@@ -140,8 +144,6 @@ namespace PFC_Final
             dotINO = dotINO.Replace("#include \"EventDefault.h\"", "#include \"Event.h\"");
             dotINO = dotINO.Replace("#define NUMBER_AUTOMATON 1", $"#define NUMBER_AUTOMATON {plantList.Count}");
             dotINO = dotINO.Replace("#define NUMBER_SUPERVISOR 1", $"#define NUMBER_SUPERVISOR {supervisorList.Count}");
-            dotINO = dotINO.Replace("#define NUMBER_EVENT 1", $"#define NUMBER_EVENT {numEvents}");
-            dotINO = dotINO.Replace("#define SIZE_EVENT 1", $"#define SIZE_EVENT {sizeVector}");
             dotINO = dotINO.Replace("// ADD-INSTANCE-AUTOMATON", instanceAutomaton.ToString());
             dotINO = dotINO.Replace("// ADD-VECTOR-EVENT", stateEventVector.ToString());
 
@@ -155,6 +157,8 @@ namespace PFC_Final
 
             dotEventH = dotEventH.Replace("// ADD-ALL-EVENTS", defineEventPosition.ToString());
             dotEventH = dotEventH.Replace("#include \"EventDefault.h\"", "#include \"Event.h\"");
+            dotEventH = dotEventH.Replace("#define SIZE_EVENT 1", $"#define SIZE_EVENT {sizeVector}");
+            dotEventH = dotEventH.Replace("#define NUMBER_EVENT 1", $"#define NUMBER_EVENT {numEvents}");
 
             dotEventCPP = dotEventCPP.Replace("#include \"EventDefault.h\"", "#include \"Event.h\"");
 
@@ -177,6 +181,7 @@ namespace PFC_Final
 
             #endregion
 
+            Console.ReadKey();
         }
 
         private static void ConvertAutomatonList(List<DeterministicFiniteAutomaton> automatonList, Dictionary<AbstractEvent, string> eventMap, Dictionary<AbstractEvent, string> eventMapPosition, StringBuilder instanceAutomaton, StringBuilder automatonLoopForAll, StringBuilder automatonLoop, StringBuilder trasionLogic, StringBuilder stateActionForAll, StringBuilder stateAction, StringBuilder stateEventVector, StringBuilder makeTrasition, StringBuilder assignmentVector, int sizeVector, ref int autnumLocal, string typeAutomaton)
@@ -198,7 +203,7 @@ namespace PFC_Final
                 automatonLoopForAll.AppendLine("}\n");
 
                 automatonLoop.AppendLine($"void Automaton{autnum}Loop(int State); \n");
-                trasionLogic.Append($"int MakeTransitionAutomaton{autnum}(int State, uint8_t eventPosition);\n");
+                trasionLogic.Append($"int MakeTransitionAutomaton{autnum}(int State, Event eventOccurred);\n");
 
                 if (!isSupervisor)
                 {
@@ -226,6 +231,10 @@ namespace PFC_Final
 
                 List<string> listEventOfState = new List<string>();
 
+                var allEvent = automaton.Events.Select(t => eventMap[t]).ToList();
+                string alphabet = ConcatenateBinaryStrings(allEvent);
+
+
 
 
                 foreach (var state in automaton.States)
@@ -233,7 +242,11 @@ namespace PFC_Final
                     var stateTransitions = automaton.Transitions.Where(t => t.Origin.Equals(state)).ToList();
                     var events = stateTransitions.Select(t => eventMap[t.Trigger]).ToList();
 
+                    Console.WriteLine(ConcatenateBinaryStrings(events));
+                    events.Add(InverterStringBinaria(alphabet));
+
                     string eventsString = ConcatenateBinaryStrings(events);
+                    
                     listEventOfState.Add(eventsString);
 
                     stateMap[state] = count;
@@ -243,19 +256,19 @@ namespace PFC_Final
                 StringBuilder eventHandler = new StringBuilder();
 
 
-                eventHandler.AppendLine(string.Join("\n", listEventOfState.Select((item, index) => $"\tuint8_t eventDataAUT{autnum}EV{index}[{sizeVector}]={item};")));
+                eventHandler.AppendLine(string.Join("\n", listEventOfState.Select((item, index) => $"uint8_t eventDataAUT{autnum}EV{index}[{sizeVector}] = {item};")));
 
-                stateEventVector.Append(eventHandler.ToString());
-                stateEventVector.Append($"\tEvent enabledEventStatesAutomaton{autnum}[{count}]={{");
+                stateEventVector.AppendLine(eventHandler.ToString());
+                stateEventVector.Append($"Event enabledEventStatesAutomaton{autnum}[{count}] = {{");
                 stateEventVector.Append(string.Join(",", listEventOfState.Select((item, index) => $" createEventFromData(eventDataAUT{autnum}EV{index})")));
-                stateEventVector.Append($"}};\n\n");
+                stateEventVector.Append($"}};\n");
 
 
-                makeTrasition.AppendLine($"int MakeTransitionAutomaton{autnum}(int State, uint8_t eventPosition) \n{{ ");
+                makeTrasition.AppendLine($"int MakeTransitionAutomaton{autnum}(int State, Event eventOccurred) \n{{ ");
 
                 foreach (var (o, ev, d) in automaton.Transitions)
                 {
-                    makeTrasition.AppendLine($"\tif (State == {stateMap[o]} && (eventPosition=={eventMapPosition[ev]})){{ ");
+                    makeTrasition.AppendLine($"\tif (State == {stateMap[o]} && (getBit(eventOccurred,{eventMapPosition[ev]}))){{ ");
                     makeTrasition.AppendLine($"\t\treturn {stateMap[d]};");
                     makeTrasition.AppendLine("\t}");
 
@@ -266,14 +279,11 @@ namespace PFC_Final
                 makeTrasition.AppendLine("}\n");
 
 
-                instanceAutomaton.Append($"\t{typeAutomaton}[{countAut}] = ");
-
-                instanceAutomaton.Append($"Automaton({numberStates}," +
-                $"enabledEventStatesAutomaton{autnum},&MakeTransitionAutomaton{autnum},&Automaton{autnum}Loop);\n");
-
-
-
-
+                instanceAutomaton.Append("\n" + $"\t\t{typeAutomaton}[{countAut}] = ").Append(
+                    $"Automaton({numberStates}," +
+                    $"enabledEventStatesAutomaton{autnum}," +
+                    $"&MakeTransitionAutomaton{autnum}," +
+                    $"&Automaton{autnum}Loop);");
 
 
                 if (isSupervisor)
@@ -361,7 +371,25 @@ namespace PFC_Final
 
             return "{" + result.ToString() + "}";
         }
+        private static string InverterStringBinaria(string input)
+        {
+         
+            char[] chars = input.ToCharArray();
 
+            for (int i = 2; i < input.Length - 1; i++)
+            {
+                if (chars[i] == '0')
+                {
+                    chars[i] = '1';
+                }
+                else if (chars[i] == '1')
+                {
+                    chars[i] = '0';
+                }
+            }
+
+            return new string(chars);
+        }
 
     }
 }

@@ -1,10 +1,10 @@
 #include "AutomatonDefault.h"
 #include "EventDefault.h"
 
-Automaton::Automaton(int numStates, Event *enabledEventStates, int (*MakeTransition)(int state, uint8_t eventPosition), void (*Loop)(int state))
+Automaton::Automaton(int numStates, Event *enabledEventStates, int (*MakeTransition)(int state, Event eventOccurred), void (*Loop)(int state))
     : numStates(numStates), enabledEventStates(enabledEventStates), MakeTransition(MakeTransition), Loop(Loop) {}
 
-Automaton::Automaton(){}
+Automaton::Automaton() {}
 
 Automaton::~Automaton() {}
 
@@ -28,16 +28,9 @@ int Automaton::getNumStates()
     return numStates;
 }
 
-Event Automaton::getEnabledEvent(Event emptyEvent)
+Event Automaton::getEnabledEvent()
 {
-    if (actualState >= 0 && actualState < sizeof(enabledEventStates) / sizeof(enabledEventStates[0]))
-    {
-        return enabledEventStates[actualState];
-    }
-    else
-    {
-        return emptyEvent;
-    }
+    return enabledEventStates[actualState];
 }
 
 // ADD-SET-VECTOR
