@@ -13,6 +13,8 @@ namespace PFC_Final
         static void Main(string[] args)
         {
 
+            #region pequena fabrica
+            /*
             // Estados da Maquina 1
             State S11 = new State("S11", Marking.Marked);
             State S12 = new State("S12", Marking.Unmarked);
@@ -58,6 +60,8 @@ namespace PFC_Final
                     new[] { E },
                     true
               );
+            */
+            #endregion
 
             #region SIDIM
             /*
@@ -188,11 +192,38 @@ namespace PFC_Final
             List<DeterministicFiniteAutomaton> planta = new List<DeterministicFiniteAutomaton>();
             List<DeterministicFiniteAutomaton> supervisor = new List<DeterministicFiniteAutomaton>();
 
+            int size = 40;
 
-            planta.Add(G1);
-            planta.Add(G2);
+            var states = Enumerable.Range(0, size).Select(i =>
+                       new State($"S_{i}",
+                           i % 2 != 0
+                               ? Marking.Unmarked
+                               : Marking.Marked)
+                   ).ToArray();
 
-            supervisor.Add(Supervisor);
+
+            var events = Enumerable.Range(0, size).Select(i =>
+                       new Event($"E_{i}",
+                           i % 2 != 0
+                               ? Controllability.Controllable
+                               : Controllability.Uncontrollable)
+                   ).ToArray();
+
+            for (int i = 0; i < size-1; i=i+2)
+            {
+                var gerador = new DeterministicFiniteAutomaton(new[]{
+                new Transition(states[i], events[i], states[i+1]),
+                new Transition(states[i+1], events[i+1], states[i])
+              }, states[i], $"G{i}");
+
+
+                planta.Add(gerador);
+
+            }
+            //planta.Add(G1);
+            //planta.Add(G2);
+
+            //supervisor.Add(Supervisor);
 
 
             INOGenerator.ConvertDEStoINO(planta, supervisor);
