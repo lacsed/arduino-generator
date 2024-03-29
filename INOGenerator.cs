@@ -174,7 +174,6 @@ namespace PFC_Final
             #endregion
 
         }
-
         private static void ConvertAutomatonList(List<DeterministicFiniteAutomaton> automatonList, Dictionary<AbstractEvent, string> eventMap, Dictionary<AbstractEvent, string> eventMapPosition, StringBuilder instanceAutomaton, StringBuilder automatonLoopForAll, StringBuilder automatonLoop, StringBuilder trasionLogic, StringBuilder stateActionForAll, StringBuilder stateAction, StringBuilder stateEventVector, StringBuilder makeTrasition, StringBuilder assignmentVector, int sizeVector, ref int autnumLocal, string typeAutomaton)
         {
             int numberOfAutomatons = automatonList.Count;
@@ -280,6 +279,8 @@ namespace PFC_Final
             }
             autnumLocal = autnum;
         }
+
+        
         private static string ConcatenateBinaryStrings(List<string> input)
         {
             int sizeString = input[0].Length;

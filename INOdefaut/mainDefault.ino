@@ -49,10 +49,9 @@ void loop()
     getEventControllable(eventControllable);
     getEventUncontrollable(eventUncontrollable);
 
-    // Verify the events that are able to happen
+    // Free the events that are physically possible
     zeroEvent(eventEnabled);
-
-    // Check the enabled events
+    // Check the events that are physically possible
     for (int i = 0; i < NUMBER_AUTOMATON; i++)
     {
         actualState = automata[i].getActualState();
