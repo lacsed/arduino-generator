@@ -1,19 +1,34 @@
 #include "AutomatonDefault.h"
 
-unsigned long getEventControllablble()
+void setupPin()
 {
+}
+
+void getEventControllable(Event &eventControllable)
+{
+
     if (!Serial.available())
     {
-        return 0;
+        return;
     }
-    unsigned long valorSerial = Serial.parseInt();
-    return valorSerial;
+
+    String input = Serial.readStringUntil('\n');
+    input.trim();
+
+    int actualEvent = input.toInt();
+
+    if (actualEvent >= 0 && actualEvent < NUMBER_EVENT)
+    {
+        setBit(eventControllable, actualEvent, true);
+    }
+    else
+    {
+        Serial.println("There isn't this event or the input is not valid");
+    }
 }
 
 // ADD-GET-EVENT-UNCONTROLLABLE
-void setupPin(){
-    
-}
- 
+
 // ADD-EVENT-UNCONTROLLABLE
+
 // ADD-STATE-ACTION

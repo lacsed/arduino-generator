@@ -1,18 +1,42 @@
 #include "AutomatonDefaut.h"
+#include "EventDefault.h"
 
 // Define the number of automatons
 #define NUMBER_AUTOMATON 1
 #define NUMBER_SUPERVISOR 1
-#define NUMBER_EVENT 1
 
-// Initialize the automatons
-// ADD-VECTOR-EVENT
+int actualState;
+
+// Functions
+void executeTransition(Event eventOccurred);
+
+// Initialize Events
+int firstEventUncontrollable = 0;
+int firstEventControllable = 0;
+
+Event eventControllable = createEvent();
+Event eventUncontrollable = createEvent();
+
+Event eventEnabledControllable = createEvent();
+Event eventEnabledUncontrollable = createEvent();
+
+Event emptyEvent = createEvent();
+Event eventEnabled = createEvent();
+
+Event eventOccurred = createEvent();
 
 // Create a vector to store the automatons
-// ADD-INSTANCE-AUTOMATON
+Automaton automata[NUMBER_AUTOMATON];
+Automaton supervisor[NUMBER_SUPERVISOR];
+
+// ADD-VECTOR-EVENT
 
 void setup()
 {
+
+    // Initialize the automatons
+    // ADD-INSTANCE-AUTOMATON
+
     Serial.begin(9600);
     setupPin();
 }
@@ -22,81 +46,109 @@ void loop()
 {
 
     // Get the system events
-    unsigned long eventControllablble = getEventControllablble();
-    unsigned long eventUncontrollable = getEventUncontrollable();
+    getEventControllable(eventControllable);
+    getEventUncontrollable(eventUncontrollable);
 
-    if (eventUncontrollable > 0)
+    // Free the events that are physically possible
+    zeroEvent(eventEnabled);
+    // Check the events that are physically possible
+    for (int i = 0; i < NUMBER_AUTOMATON; i++)
+    {
+        actualState = automata[i].getActualState();
+        bitwiseOr(eventEnabled, eventEnabled, automata[i].enabledEventStates[actualState]);
+    }
+
+    bitwiseAnd(eventEnabledUncontrollable, eventUncontrollable, eventEnabled);
+    bitwiseAnd(eventEnabledControllable, eventControllable, eventEnabled);
+
+    if (!areEqual(eventEnabledUncontrollable, emptyEvent))
     {
         for (int i = 0; i < NUMBER_EVENT; i++)
         {
+            int index = (firstEventUncontrollable + i) % NUMBER_EVENT;
             // Get one Uncontrollable Event each time
-
-            unsigned long event = eventUncontrollable & (1L << i);
-            if (event > 0)
+            bool existEvent = getBit(eventEnabledUncontrollable, index);
+            if (existEvent)
             {
-                // Execute the state transition for each supervisor
-                for (int k = 0; k < NUMBER_SUPERVISOR; k++)
-                {
-                    int actualState = supervisor[k].getActualState();
-                    int nextState = supervisor[k].MakeTransition(actualState, event);
-                    supervisor[k].setActualState(nextState);
-                }
+                setBit(eventOccurred, index, true);
+                executeTransition(eventOccurred);
+                setBit(eventUncontrollable, index, false);
 
-                // Execute the state transition for each automaton
-                for (int j = 0; j < NUMBER_AUTOMATON; j++)
-                {
-                    int actualState = automata[j].getActualState();
-                    int nextState = automata[j].MakeTransition(actualState, event);
-                    automata[j].setActualState(nextState);
-                }
+                zeroEvent(eventOccurred);
+                break;
             }
         }
+
+        zeroEvent(eventEnabledUncontrollable);
+        firstEventUncontrollable = (firstEventUncontrollable + 1) % NUMBER_EVENT;
     }
-
-    unsigned long eventEnabled = (1 << NUMBER_EVENT) - 1;
-
-    // Check the enabled events
-    for (int i = 0; i < NUMBER_SUPERVISOR; i++)
-    {
-        eventEnabled &= supervisor[i].getEnabledEvent();
-    }
-
-    // Check if any enabled Controllable event was detected
-    unsigned long eventEnabledControlable = eventControllablble & eventEnabled;
-
-    if (eventEnabledControlable > 0)
+    else
     {
 
-        for (int i = 0; i < NUMBER_EVENT; i++)
+        // Check the enabled events
+        oneEvent(eventEnabled);
+        for (int i = 0; i < NUMBER_SUPERVISOR; i++)
+        {
+            actualState = automata[i].getActualState();
+            bitwiseAnd(eventEnabled, eventEnabled, supervisor[i].getEnabledEvent());
+        }
+
+        // Check if any enabled Controllable event was detected
+        bitwiseAnd(eventEnabledControllable, eventEnabledControllable, eventEnabled);
+
+        if (!areEqual(eventEnabledControllable, emptyEvent))
         {
 
-            // Get the First Controllable Event Enabled
-            unsigned long event = eventEnabledControlable & (1L << i);
-            if (event > 0)
+            for (int i = 0; i < NUMBER_EVENT; i++)
             {
-                // Execute the state transition for each supervisor
-                for (int k = 0; k < NUMBER_SUPERVISOR; k++)
-                {
-                    int actualState = supervisor[k].getActualState();
-                    int nextState = supervisor[k].MakeTransition(actualState, event);
-                    supervisor[k].setActualState(nextState);
-                }
+                int index = (firstEventControllable + i) % NUMBER_EVENT;
 
-                // Execute the state transition for each automaton
-                for (int j = 0; j < NUMBER_AUTOMATON; j++)
+                // Get one Controllable Event each time
+                bool existEvent = getBit(eventEnabledControllable, index);
+
+                if (existEvent)
                 {
-                    int actualState = automata[j].getActualState();
-                    int nextState = automata[j].MakeTransition(actualState, event);
-                    automata[j].setActualState(nextState);
+                    setBit(eventOccurred, index, true);
+                    executeTransition(eventOccurred);
+                    setBit(eventControllable, index, false);
+
+                    zeroEvent(eventOccurred);
+                    break;
                 }
             }
+
+            zeroEvent(eventEnabledControllable);
+            firstEventControllable = (firstEventControllable + 1) % NUMBER_EVENT;
         }
+
+        zeroEvent(eventEnabled);
     }
 
     // Execute the Loop function for each automaton
     for (int i = 0; i < NUMBER_AUTOMATON; i++)
     {
-        int actualState = automata[i].getActualState();
+        actualState = automata[i].getActualState();
         automata[i].Loop(actualState);
+    }
+}
+
+void executeTransition(Event eventOccurred)
+{
+    // Execute the state transition for each supervisor
+    for (int k = 0; k < NUMBER_SUPERVISOR; k++)
+    {
+
+        actualState = supervisor[k].getActualState();
+        int nextState = supervisor[k].MakeTransition(actualState, eventOccurred);
+        supervisor[k].setActualState(nextState);
+    }
+
+    // Execute the state transition for each automaton
+    for (int j = 0; j < NUMBER_AUTOMATON; j++)
+    {
+
+        actualState = automata[j].getActualState();
+        int nextState = automata[j].MakeTransition(actualState, eventOccurred);
+        automata[j].setActualState(nextState);
     }
 }
