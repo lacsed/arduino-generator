@@ -89,7 +89,6 @@ void loop()
         oneEvent(eventEnabled);
         for (int i = 0; i < NUMBER_SUPERVISOR; i++)
         {
-            actualState = automata[i].getActualState();
             bitwiseAnd(eventEnabled, eventEnabled, supervisor[i].getEnabledEvent());
         }
 

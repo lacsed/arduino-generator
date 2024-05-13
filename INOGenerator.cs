@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -187,18 +188,18 @@ namespace PFC_Final
             {
                 int numberStates = automaton.States.Count();
 
-                automatonLoopForAll.AppendLine($"void Automaton{autnum}Loop(int State){{");
+                automatonLoopForAll.AppendLine($"void Automaton{autnum}Loop{RemoveSpecialCharacters(automaton.Name)}(int State){{");
                 automatonLoopForAll.AppendLine($"\tActionAutomatons{autnum}[State]();");
                 automatonLoopForAll.AppendLine("}\n");
 
-                automatonLoop.AppendLine($"void Automaton{autnum}Loop(int State); \n");
-                trasionLogic.Append($"int MakeTransitionAutomaton{autnum}(int State, Event eventOccurred);\n");
+                automatonLoop.AppendLine($"void Automaton{autnum}Loop{RemoveSpecialCharacters(automaton.Name)}(int State); \n");
+                trasionLogic.Append($"int MakeTransitionAutomaton{autnum}{RemoveSpecialCharacters(automaton.Name)}(int State, Event eventOccurred);\n");
 
                 if (!isSupervisor)
                 {
                     for (int i = 0; i < numberStates; i++)
                     {
-                        string stateName = $"StateActionAutomaton{autnum}State{i}";
+                        string stateName = $"StateActionAutomaton{RemoveSpecialCharacters(automaton.Name)}State{i}";
 
                         stateActionForAll.Append($"void {stateName}()\n{{\n\tSerial.println(\"A{autnum}S{i}\");\n \tdelay(500);\n}}\n\n");
                         stateAction.Append($"void {stateName}();\n");
@@ -220,6 +221,8 @@ namespace PFC_Final
                 string alphabet = ConcatenateBinaryStrings(allEvent);
 
 
+                
+
                 foreach (var state in automaton.States)
                 {
                     var stateTransitions = automaton.Transitions.Where(t => t.Origin.Equals(state)).ToList();
@@ -228,8 +231,9 @@ namespace PFC_Final
                     events.Add(InvertBinaryString(alphabet));
 
                     string eventsString = ConcatenateBinaryStrings(events);
-                    
+                   
                     listEventOfState.Add(eventsString);
+
 
                     stateMap[state] = count;
                     count++;
@@ -244,7 +248,7 @@ namespace PFC_Final
                 stateEventVector.Append(string.Join(",", listEventOfState.Select((item, index) => $" createEventFromData(eventDataAUT{autnum}EV{index})")));
                 stateEventVector.Append($"}};\n");
 
-                makeTrasition.AppendLine($"int MakeTransitionAutomaton{autnum}(int State, Event eventOccurred) \n{{ ");
+                makeTrasition.AppendLine($"int MakeTransitionAutomaton{autnum}{RemoveSpecialCharacters(automaton.Name)}(int State, Event eventOccurred) \n{{ ");
 
                 foreach (var (o, ev, d) in automaton.Transitions)
                 {
@@ -261,8 +265,8 @@ namespace PFC_Final
                 instanceAutomaton.Append("\n" + $"\t\t{typeAutomaton}[{countAut}] = ").Append(
                     $"Automaton({numberStates}," +
                     $"enabledEventStatesAutomaton{autnum}," +
-                    $"&MakeTransitionAutomaton{autnum}," +
-                    $"&Automaton{autnum}Loop);");
+                    $"&MakeTransitionAutomaton{autnum}{RemoveSpecialCharacters(automaton.Name)}," +
+                    $"&Automaton{autnum}Loop{RemoveSpecialCharacters(automaton.Name)});");
 
 
                 if (isSupervisor)
@@ -271,7 +275,7 @@ namespace PFC_Final
                 }
                 else
                 {
-                    assignmentVector.AppendLine($"GenericAction ActionAutomatons{autnum}[{numberStates}]={{ {string.Join(",", Enumerable.Range(0, numberStates).Select(i => $"&StateActionAutomaton{autnum}State{i}"))} }};");
+                    assignmentVector.AppendLine($"GenericAction ActionAutomatons{autnum}[{numberStates}]={{ {string.Join(",", Enumerable.Range(0, numberStates).Select(i => $"&StateActionAutomaton{RemoveSpecialCharacters(automaton.Name)}State{i}"))} }};");
                 }
 
                 countAut++;
@@ -367,5 +371,24 @@ namespace PFC_Final
 
             return new string(chars);
         }
+
+        public static string RemoveSpecialCharacters(string str)
+        {
+            str = str.Normalize(NormalizationForm.FormD);
+
+            StringBuilder sb = new StringBuilder();
+            foreach (char c in str)
+            {
+                // Verifica se o caractere não é um diacrítico e o adiciona ao StringBuilder
+                if (CharUnicodeInfo.GetUnicodeCategory(c) != UnicodeCategory.NonSpacingMark)
+                {
+                    sb.Append(c);
+                }
+            }
+            Regex regex = new Regex("[^a-zA-Z0-9]");
+
+            return regex.Replace(sb.ToString(), "");
+        }
+
     }
 }

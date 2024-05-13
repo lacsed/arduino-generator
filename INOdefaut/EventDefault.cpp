@@ -28,8 +28,9 @@ void copyEvent(const Event source, Event &destination)
 
 void setBit(Event &event, int position, bool value)
 {
-    int byteIndex = position / 8;
+    int byteIndex = SIZE_EVENT- 1 - position / 8;
     int bitIndex = position % 8;
+
     if (value)
     {
         event.data[byteIndex] |= (1 << bitIndex);
@@ -42,8 +43,9 @@ void setBit(Event &event, int position, bool value)
 
 bool getBit(const Event event, int position)
 {
-    int byteIndex = position / 8;
+    int byteIndex = SIZE_EVENT- 1 - position / 8;
     int bitIndex = position % 8;
+
     return (event.data[byteIndex] >> bitIndex) & 1;
 }
 
