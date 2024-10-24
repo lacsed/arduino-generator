@@ -47,7 +47,10 @@ namespace PFC_Final
             StringBuilder assignmentVector = new StringBuilder();
             StringBuilder uncontrollableEvent = new StringBuilder();
             StringBuilder uncontrollableEventForAll = new StringBuilder();
+            StringBuilder controllableEvent = new StringBuilder();
+            StringBuilder controllableEventForAll = new StringBuilder();
             StringBuilder getEventUncontrollable = new StringBuilder();
+            StringBuilder getEventControllable = new StringBuilder();
             StringBuilder defineEventPosition = new StringBuilder();
 
             #endregion
@@ -81,29 +84,43 @@ namespace PFC_Final
             }
 
             getEventUncontrollable.AppendLine($"void getEventUncontrollable(Event &eventUncontrollable){{");
-
+            getEventControllable.AppendLine($"void getEventControllable(Event &eventControllable){{");
 
             foreach (var ev in listOfEvents)
             {
 
                 if (!ev.IsControllable)
                 {
-                    uncontrollableEvent.AppendLine($"bool EventUncontrollable{ev.ToString()}();");
+                    uncontrollableEvent.AppendLine($"bool EventUncontrollable_{ev.ToString()}();");
 
-                    uncontrollableEventForAll.AppendLine($"bool EventUncontrollable{ev.ToString()}(){{");
+                    uncontrollableEventForAll.AppendLine($"bool EventUncontrollable_{ev.ToString()}(){{");
                     uncontrollableEventForAll.AppendLine($"\treturn false;");
                     uncontrollableEventForAll.AppendLine($"}}\n");
 
-                    getEventUncontrollable.AppendLine($"\tif(EventUncontrollable{ev.ToString()}()){{");
+                    getEventUncontrollable.AppendLine($"\tif(EventUncontrollable_{ev.ToString()}()){{");
                     getEventUncontrollable.AppendLine($"\t\tsetBit(eventUncontrollable,{eventMapPosition[ev]}, true);");
                     getEventUncontrollable.AppendLine($"\t}}");
 
+
+                }
+                else
+                {
+                    controllableEvent.AppendLine($"bool EventControllable_{ev.ToString()}();");
+
+                    controllableEventForAll.AppendLine($"bool EventControllable_{ev.ToString()}(){{");
+                    controllableEventForAll.AppendLine($"\treturn false;");
+                    controllableEventForAll.AppendLine($"}}\n");
+
+                    getEventControllable.AppendLine($"\tif(EventControllable_{ev.ToString()}()){{");
+                    getEventControllable.AppendLine($"\t\tsetBit(eventControllable,{eventMapPosition[ev]}, true);");
+                    getEventControllable.AppendLine($"\t}}");
 
                 }
 
 
             }
             getEventUncontrollable.AppendLine($"}}");
+            getEventControllable.AppendLine($"}}");
 
             #endregion
 
@@ -128,9 +145,13 @@ namespace PFC_Final
             dotH = dotH.Replace("// ADD-STATE-ACTION", stateAction.ToString());
             dotH = dotH.Replace("// ADD-TRANSITION-LOGIC", trasionLogic.ToString());
             dotH = dotH.Replace("// ADD-AUTOMATON-LOOP", automatonLoop.ToString());
+            dotH = dotH.Replace("// ADD-EVENT-UNCONTROLLABLE", controllableEvent.ToString());
             dotH = dotH.Replace("// ADD-EVENT-UNCONTROLLABLE", uncontrollableEvent.ToString());
+            
 
             dotCPP = dotCPP.Replace("// ADD-SET-VECTOR", assignmentVector.ToString());
+            dotCPP = dotCPP.Replace("// ADD-GET-EVENT-CONTROLLABLE", getEventControllable.ToString());
+            dotCPP = dotCPP.Replace("// ADD-GET-EVENT-UNCONTROLLABLE", getEventUncontrollable.ToString());
             dotCPP = dotCPP.Replace("// ADD-VECTOR-ACTION", vectorAction.ToString());
             dotCPP = dotCPP.Replace("// ADD-AUTOMATON-LOOP", automatonLoopForAll.ToString());
             dotCPP = dotCPP.Replace("// ADD-TRANSITION-LOGIC", makeTrasition.ToString());
@@ -144,9 +165,10 @@ namespace PFC_Final
             dotINO = dotINO.Replace("// ADD-INSTANCE-AUTOMATON", instanceAutomaton.ToString());
             dotINO = dotINO.Replace("// ADD-VECTOR-EVENT", stateEventVector.ToString());
 
+
             dotUser = dotUser.Replace("// ADD-STATE-ACTION", stateActionForAll.ToString());
-            dotUser = dotUser.Replace("// ADD-GET-EVENT-UNCONTROLLABLE", getEventUncontrollable.ToString());
             dotUser = dotUser.Replace("// ADD-EVENT-UNCONTROLLABLE", uncontrollableEventForAll.ToString());
+            dotUser = dotUser.Replace("// ADD-EVENT-CONTROLLABLE", controllableEventForAll.ToString());
             dotUser = dotUser.Replace("#include \"AutomatonDefault.h\"", "#include \"Automaton.h\"");
 
             dotEventH = dotEventH.Replace("// ADD-ALL-EVENTS", defineEventPosition.ToString());
@@ -188,18 +210,18 @@ namespace PFC_Final
             {
                 int numberStates = automaton.States.Count();
 
-                automatonLoopForAll.AppendLine($"void Automaton{autnum}Loop{RemoveSpecialCharacters(automaton.Name)}(int State){{");
+                automatonLoopForAll.AppendLine($"void Automaton{autnum}Loop_{RemoveSpecialCharacters(automaton.Name)}(int State){{");
                 automatonLoopForAll.AppendLine($"\tActionAutomatons{autnum}[State]();");
                 automatonLoopForAll.AppendLine("}\n");
 
-                automatonLoop.AppendLine($"void Automaton{autnum}Loop{RemoveSpecialCharacters(automaton.Name)}(int State); \n");
-                trasionLogic.Append($"int MakeTransitionAutomaton{autnum}{RemoveSpecialCharacters(automaton.Name)}(int State, Event eventOccurred);\n");
+                automatonLoop.AppendLine($"void Automaton{autnum}Loop_{RemoveSpecialCharacters(automaton.Name)}(int State); \n");
+                trasionLogic.Append($"int MakeTransitionAutomaton{autnum}_{RemoveSpecialCharacters(automaton.Name)}(int State, Event eventOccurred);\n");
 
                 if (!isSupervisor)
                 {
                     for (int i = 0; i < numberStates; i++)
                     {
-                        string stateName = $"StateActionAutomaton{RemoveSpecialCharacters(automaton.Name)}State{i}";
+                        string stateName = $"StateActionAutomaton{autnum}_{RemoveSpecialCharacters(automaton.Name)}State{i}";
 
                         stateActionForAll.Append($"void {stateName}()\n{{\n\tSerial.println(\"A{autnum}S{i}\");\n \tdelay(500);\n}}\n\n");
                         stateAction.Append($"void {stateName}();\n");
@@ -248,7 +270,7 @@ namespace PFC_Final
                 stateEventVector.Append(string.Join(",", listEventOfState.Select((item, index) => $" createEventFromData(eventDataAUT{autnum}EV{index})")));
                 stateEventVector.Append($"}};\n");
 
-                makeTrasition.AppendLine($"int MakeTransitionAutomaton{autnum}{RemoveSpecialCharacters(automaton.Name)}(int State, Event eventOccurred) \n{{ ");
+                makeTrasition.AppendLine($"int MakeTransitionAutomaton{autnum}_{RemoveSpecialCharacters(automaton.Name)}(int State, Event eventOccurred) \n{{ ");
 
                 foreach (var (o, ev, d) in automaton.Transitions)
                 {
@@ -265,8 +287,8 @@ namespace PFC_Final
                 instanceAutomaton.Append("\n" + $"\t\t{typeAutomaton}[{countAut}] = ").Append(
                     $"Automaton({numberStates}," +
                     $"enabledEventStatesAutomaton{autnum}," +
-                    $"&MakeTransitionAutomaton{autnum}{RemoveSpecialCharacters(automaton.Name)}," +
-                    $"&Automaton{autnum}Loop{RemoveSpecialCharacters(automaton.Name)});");
+                    $"&MakeTransitionAutomaton{autnum}_{RemoveSpecialCharacters(automaton.Name)}," +
+                    $"&Automaton{autnum}Loop_{RemoveSpecialCharacters(automaton.Name)});");
 
 
                 if (isSupervisor)
@@ -275,7 +297,7 @@ namespace PFC_Final
                 }
                 else
                 {
-                    assignmentVector.AppendLine($"GenericAction ActionAutomatons{autnum}[{numberStates}]={{ {string.Join(",", Enumerable.Range(0, numberStates).Select(i => $"&StateActionAutomaton{RemoveSpecialCharacters(automaton.Name)}State{i}"))} }};");
+                    assignmentVector.AppendLine($"GenericAction ActionAutomatons{autnum}[{numberStates}]={{ {string.Join(",", Enumerable.Range(0, numberStates).Select(i => $"&StateActionAutomaton{autnum}_{RemoveSpecialCharacters(automaton.Name)}State{i}"))} }};");
                 }
 
                 countAut++;

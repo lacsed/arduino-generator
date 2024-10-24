@@ -11,10 +11,10 @@ namespace PFC_Final
 {
     class Program
     {
-        static void PequenaFabrica(string[] args)
+        static void Main(string[] args)
         {
             #region PequenaFabrica
-            /*
+
             // Estados da Maquina 1
             State S11 = new State("S11", Marking.Marked);
             State S12 = new State("S12", Marking.Unmarked);
@@ -60,7 +60,7 @@ namespace PFC_Final
                     new[] { E },
                     true
               );
-            */
+       
             #endregion
 
             #region SIDIM
@@ -201,7 +201,12 @@ namespace PFC_Final
             List<DeterministicFiniteAutomaton> planta = new List<DeterministicFiniteAutomaton>();
             List<DeterministicFiniteAutomaton> supervisor = new List<DeterministicFiniteAutomaton>();
 
-            FSM(out planta,out supervisor);
+            // FSM(out planta,out supervisor);
+
+            planta.Add(G1);
+            planta.Add(G2);
+
+            supervisor.Add(Supervisor);
 
 
             INOGenerator.ConvertDEStoINO(planta, supervisor);

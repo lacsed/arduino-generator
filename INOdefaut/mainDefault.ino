@@ -46,6 +46,7 @@ void loop()
 {
 
     // Get the system events
+    doEveryLoop();
     getEventControllable(eventControllable);
     getEventUncontrollable(eventUncontrollable);
 
