@@ -69,7 +69,7 @@ namespace PFC_Final
             Dictionary<AbstractEvent, string> eventMapPosition = new Dictionary<AbstractEvent, string>();
 
             int numEvents = listOfEvents.Count;
-            int sizeVector = (numEvents + (numEvents % 8)) / 8;
+            int sizeVector = (numEvents + (8-(numEvents % 8))) / 8;
 
 
             foreach (var element in listOfEvents)
@@ -145,7 +145,7 @@ namespace PFC_Final
             dotH = dotH.Replace("// ADD-STATE-ACTION", stateAction.ToString());
             dotH = dotH.Replace("// ADD-TRANSITION-LOGIC", trasionLogic.ToString());
             dotH = dotH.Replace("// ADD-AUTOMATON-LOOP", automatonLoop.ToString());
-            dotH = dotH.Replace("// ADD-EVENT-UNCONTROLLABLE", controllableEvent.ToString());
+            dotH = dotH.Replace("// ADD-EVENT-CONTROLLABLE", controllableEvent.ToString());
             dotH = dotH.Replace("// ADD-EVENT-UNCONTROLLABLE", uncontrollableEvent.ToString());
             
 
