@@ -5,16 +5,17 @@ using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 using UltraDES;
+using System.IO;
 
 
 namespace PFC_Final
 {
     class Program
     {
-        static void PequenaFabrica(string[] args)
+        static void Main(string[] args)
         {
             #region PequenaFabrica
-            /*
+
             // Estados da Maquina 1
             State S11 = new State("S11", Marking.Marked);
             State S12 = new State("S12", Marking.Unmarked);
@@ -60,7 +61,7 @@ namespace PFC_Final
                     new[] { E },
                     true
               );
-            */
+
             #endregion
 
             #region SIDIM
@@ -198,10 +199,42 @@ namespace PFC_Final
 
             #endregion
 
-            List<DeterministicFiniteAutomaton> planta = new List<DeterministicFiniteAutomaton>();
-            List<DeterministicFiniteAutomaton> supervisor = new List<DeterministicFiniteAutomaton>();
 
-            FSM(out planta,out supervisor);
+
+
+
+            string directoryPath = @"D:\Users\matheus\Source\Repos\Data";
+            List<DeterministicFiniteAutomaton> supervisor = new List<DeterministicFiniteAutomaton>();
+            List<DeterministicFiniteAutomaton> planta = new List<DeterministicFiniteAutomaton>();
+
+            // Obtém todos os arquivos no diretório
+            string[] files = Directory.GetFiles(directoryPath);
+
+            foreach (string file in files)
+            {
+                // Extrai o nome do arquivo sem o caminho completo
+                string fileName = Path.GetFileName(file);
+
+                // Verifica se o nome do arquivo começa com "Sup_"
+                if (fileName.StartsWith("Sup_"))
+                {
+                    // Adiciona à lista de supervisores
+                    supervisor.Add(DeterministicFiniteAutomaton.FromXMLFile(file));
+                }
+                else
+                {
+                    // Adiciona à lista de plantas
+                    planta.Add(DeterministicFiniteAutomaton.FromXMLFile(file));
+                }
+            }
+
+
+            // FSM(out planta,out supervisor);
+
+            //planta.Add(G1);
+            //planta.Add(G2);
+
+            //supervisor.Add(Supervisor);
 
 
             INOGenerator.ConvertDEStoINO(planta, supervisor);

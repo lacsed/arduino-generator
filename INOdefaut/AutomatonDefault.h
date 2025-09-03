@@ -29,10 +29,13 @@ private:
 };
 
 void setupPin();
+void doEveryLoop();
 void getEventControllable(Event &eventControllable);     // Obtains Controllablble events
 void getEventUncontrollable(Event &eventUncontrollable); // Obtains Uncontrollablble events
 
 // ADD-AUTOMATON-LOOP
+
+// ADD-EVENT-CONTROLLABLE
 
 // ADD-EVENT-UNCONTROLLABLE
 

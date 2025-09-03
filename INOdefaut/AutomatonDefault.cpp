@@ -33,6 +33,10 @@ Event Automaton::getEnabledEvent()
     return enabledEventStates[actualState];
 }
 
+// ADD-GET-EVENT-CONTROLLABLE
+
+// ADD-GET-EVENT-UNCONTROLLABLE
+
 // ADD-SET-VECTOR
 
 // ADD-AUTOMATON-LOOP
