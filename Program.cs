@@ -201,41 +201,13 @@ namespace PFC_Final
 
 
 
-
-
-            string directoryPath = @"D:\Users\matheus\Source\Repos\Data";
             List<DeterministicFiniteAutomaton> supervisor = new List<DeterministicFiniteAutomaton>();
             List<DeterministicFiniteAutomaton> planta = new List<DeterministicFiniteAutomaton>();
 
-            // Obtém todos os arquivos no diretório
-            string[] files = Directory.GetFiles(directoryPath);
+            planta.Add(G1);
+            planta.Add(G2);
 
-            foreach (string file in files)
-            {
-                // Extrai o nome do arquivo sem o caminho completo
-                string fileName = Path.GetFileName(file);
-
-                // Verifica se o nome do arquivo começa com "Sup_"
-                if (fileName.StartsWith("Sup_"))
-                {
-                    // Adiciona à lista de supervisores
-                    supervisor.Add(DeterministicFiniteAutomaton.FromXMLFile(file));
-                }
-                else
-                {
-                    // Adiciona à lista de plantas
-                    planta.Add(DeterministicFiniteAutomaton.FromXMLFile(file));
-                }
-            }
-
-
-            // FSM(out planta,out supervisor);
-
-            //planta.Add(G1);
-            //planta.Add(G2);
-
-            //supervisor.Add(Supervisor);
-
+            supervisor.Add(Supervisor);
 
             INOGenerator.ConvertDEStoINO(planta, supervisor);
 
